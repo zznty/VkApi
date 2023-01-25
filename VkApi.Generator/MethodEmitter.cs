@@ -3,8 +3,8 @@ using System.Collections.Immutable;
 using System.Text;
 using System.Text.RegularExpressions;
 using CaseExtensions;
-using VKApiSchemaParser.Models;
-using VKApiSchemaParser.Models.Schemas;
+using VKApi.Schema.Models;
+using VKApi.Schema.Models.Schemas;
 
 namespace VkApi.Generator;
 

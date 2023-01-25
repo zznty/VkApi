@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using VkApi.Generator;
-using VKApiSchemaParser;
+using VKApi.Schema;
 
 internal class Program
 {

@@ -13,7 +13,10 @@
         <PackageReference Include="Microsoft.Build.Locator" Version="1.5.5" />
         <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.4.0" />
         <PackageReference Include="System.CommandLine.DragonFruit" Version="0.4.0-alpha.22272.1" />
-        <PackageReference Include="VKApiSchemaParser" Version="1.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VKApi.Schema\VKApi.Schema.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using System.Text;
 using CaseExtensions;
-using VKApiSchemaParser.Models;
+using VKApi.Schema.Models;
 
 namespace VkApi.Generator;
 
