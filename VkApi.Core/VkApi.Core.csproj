@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="Ardalis.SmartEnum.SystemTextJson" Version="2.1.0" />
+    </ItemGroup>
+    
+    <Target Name="GenerateDto" BeforeTargets="PreBuildEvent">
+        <Exec Command="$(SolutionDir)VkApi.Generator\bin\$(Configuration)\net7.0\VkApi.Generator.exe --target-directory &quot;$(ProjectDir)Generated&quot; --project &quot;$(ProjectPath)&quot; --sdk-path &quot;$(MSBuildBinPath)&quot;" />
+        <ItemGroup>
+            <Compile Remove="Generated\*.g.cs" />
+            <Compile Include="Generated\*.g.cs" />
+        </ItemGroup>
+    </Target>
+
+</Project>
