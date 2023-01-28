@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using JorgeSerrano.Json;
@@ -24,6 +25,8 @@ public class ApiClient : IApiClient
         _httpClient = httpClient;
         _version = version;
     }
+
+    public HttpRequestHeaders Headers => _httpClient.DefaultRequestHeaders;
 
     public async Task<TResponse> RequestAsync<TRequest, TResponse>(string methodName, TRequest request)
         where TRequest : class where TResponse : Response
