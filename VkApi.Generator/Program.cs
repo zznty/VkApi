@@ -3,8 +3,9 @@ using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
-using VkApi.Generator;
 using VKApi.Schema;
+
+namespace VkApi.Generator;
 
 internal static class Program
 {
