@@ -29,7 +29,7 @@ public class ApiClient : IApiClient
     public HttpRequestHeaders Headers => _httpClient.DefaultRequestHeaders;
 
     public async Task<TResponse> RequestAsync<TRequest, TResponse>(string methodName, TRequest request)
-        where TRequest : class where TResponse : Response
+        where TRequest : class where TResponse : class
     {
         var node = JsonSerializer.SerializeToNode(request, _options)!;
         node["v"] = _version;
@@ -41,16 +41,16 @@ public class ApiClient : IApiClient
     {
         return new FormUrlEncodedContent(node.AsObject().Where(b => b.Value is { })
                                                     .Select(b => new KeyValuePair<string, string>(
-                                                                b.Key, b.Value!.ToJsonString())));
+                                                                b.Key, b.Value!.ToString())));
     }
 
-    public Task<TResponse> RequestAsync<TResponse>(string methodName) where TResponse : Response
+    public Task<TResponse> RequestAsync<TResponse>(string methodName) where TResponse : class
     {
         return RequestAsync<TResponse>(methodName, null);
     }
 
     private async Task<TResponse> RequestAsync<TResponse>(string methodName, HttpContent? content)
-        where TResponse : Response
+        where TResponse : class
     {
         using var response = await _httpClient.PostAsync(methodName, content);
         response.EnsureSuccessStatusCode();
@@ -62,6 +62,6 @@ public class ApiClient : IApiClient
             throw new ApiException(error["error_code"]!.GetValue<int>(),
                                    error["error_msg"]?.ToString()); // TODO use generated types instead
 
-        return typeof(TResponse) == typeof(Response) ? null! : node!["response"].Deserialize<TResponse>(_options)!;
+        return typeof(TResponse) == typeof(EmptyResponse) ? null! : node.Deserialize<TResponse>(_options)!;
     }
 }

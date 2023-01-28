@@ -1,3 +1,4 @@
 ﻿namespace VkApi.Core.Responses;
 
-public abstract record Response;
+public record WrapResponse<T>(T Response) where T : class;
+public abstract record EmptyResponse;

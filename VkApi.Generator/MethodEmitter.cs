@@ -106,11 +106,11 @@ public partial class {0} : SmartEnum<{0}, {1}>
             {
                 [{ Properties: { } responseProperties }] when responseProperties.ToArray() is
                         { Length: > 0 } responsePropertiesArray =>
-                    EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
-                             responsePropertiesArray, true),
+                    $"WrapResponse<{EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
+                                responsePropertiesArray)}>",
                 [{ Type: ApiObjectType.Array, Items.Properties: { } }] arrayProperties =>
                     EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
-                             arrayProperties, true),
+                             arrayProperties),
                 _ => null
             }
             : null;
@@ -123,9 +123,9 @@ public partial class {0} : SmartEnum<{0}, {1}>
         classBuilder.Append("public ").AppendLine(methodHeader).AppendLine("{");
 
         if (parameterType is null)
-            classBuilder.AppendFormat(MethodContentNoRequest, method.FullName, responseType ?? "Response");
+            classBuilder.AppendFormat(MethodContentNoRequest, method.FullName, responseType ?? "EmptyResponse");
         else
-            classBuilder.AppendFormat(MethodContentFull, method.FullName, parameterType, responseType ?? "Response");
+            classBuilder.AppendFormat(MethodContentFull, method.FullName, parameterType, responseType ?? "EmptyResponse");
 
         classBuilder.AppendLine("}");
     }
@@ -145,7 +145,7 @@ public partial class {0} : SmartEnum<{0}, {1}>
         return str;
     }
 
-    private string EmitType(string name, string ns, IEnumerable<ApiObject> properties, bool isResponse = false)
+    private string EmitType(string name, string ns, IEnumerable<ApiObject> properties)
     {
         if (_additionalFiles.ContainsKey(name))
             return name;
@@ -171,7 +171,7 @@ public partial class {0} : SmartEnum<{0}, {1}>
         if (sb[^(1 + Environment.NewLine.Length)] == ',')
             sb.Remove(sb.Length - (1 + Environment.NewLine.Length), 1);
 
-        sb.Append(isResponse ? ") : Response;" : ");");
+        sb.Append(");");
 
         _additionalFiles.TryAdd($"{name}.g.cs", sb);
 
