@@ -39,11 +39,12 @@ public static class VKApiSchema
     /// <summary>
     /// Parses API schema and returns all its content.
     /// </summary>
+    /// <param name="repositoryUrl">Base url for repository to fetch schema from.</param>
     /// <returns>API schema content.</returns>
-    public static async Task<ApiSchema> ParseAsync()
+    public static async Task<ApiSchema> ParseAsync(string repositoryUrl)
     {
         using var client = new HttpClient();
-        var zip = await GetSchemaZipAsync(client);
+        var zip = await GetSchemaZipAsync(repositoryUrl, client);
 
         var registry = new SchemaRegistry(ValidationOptions.Default)
         {
@@ -113,11 +114,11 @@ public static class VKApiSchema
         };
     }
 
-    private static async Task<ZipArchive> GetSchemaZipAsync(HttpClient client)
+    private static async Task<ZipArchive> GetSchemaZipAsync(string url, HttpClient client)
     {
         return new ZipArchive(
-            await client.GetStreamAsync("https://github.com/VKCOM/vk-api-schema/archive/refs/heads/master.zip"),
-            ZipArchiveMode.Read);
+            await client.GetStreamAsync(new Uri(new(url), "archive/refs/heads/master.zip")),
+                                                ZipArchiveMode.Read);
     }
 }
 

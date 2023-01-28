@@ -6,8 +6,10 @@ using Microsoft.CodeAnalysis.MSBuild;
 using VkApi.Generator;
 using VKApi.Schema;
 
-internal class Program
+internal static class Program
 {
+    private const string RepositoryUrl = "https://github.com/zznty/vk-api-schema/";
+    
     public static async Task Main(DirectoryInfo targetDirectory, FileInfo project, DirectoryInfo sdkPath)
     {
         if (targetDirectory.Exists)
@@ -17,7 +19,7 @@ internal class Program
 
         var filesProperties = await GetFilesPropertiesAsync(project.FullName, sdkPath.FullName);
 
-        var schema = await VKApiSchema.ParseAsync();
+        var schema = await VKApiSchema.ParseAsync(RepositoryUrl);
 
         async Task AddFile(string fileName, StringBuilder content)
         {
