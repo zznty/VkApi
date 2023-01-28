@@ -16,15 +16,6 @@ namespace VKApi.Schema;
 /// </summary>
 public static class VKApiSchema
 {
-    private static readonly string[] NoResolveNames =
-    {
-        "messages_foreign_message",
-        "market_market_category_nested",
-        "stories_story",
-        "stories_feed_item",
-        "notifications_notification",
-    };
-
     static VKApiSchema()
     {
         SchemaKeywordRegistry.Register<MethodsKeyword>();
@@ -41,6 +32,8 @@ public static class VKApiSchema
         SchemaKeywordRegistry.Register<GlobalKeyword>();
         SchemaKeywordRegistry.Register<SubcodesKeyword>();
         SchemaKeywordRegistry.Register<SubcodeKeyword>();
+        SchemaKeywordRegistry.Unregister<Json.Schema.ItemsKeyword>();
+        SchemaKeywordRegistry.Register<Keywords.ItemsKeyword>();
     }
 
     /// <summary>

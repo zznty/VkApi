@@ -1,6 +1,7 @@
 ﻿using Json.Schema;
 using VKApi.Schema.Keywords;
 using VKApi.Schema.Models;
+using ItemsKeyword = VKApi.Schema.Keywords.ItemsKeyword;
 using RequiredKeyword = Json.Schema.RequiredKeyword;
 
 namespace VKApi.Schema.Parsers;
@@ -51,7 +52,7 @@ internal abstract class BaseSchemaParser<T>
                          .Select(b => b!.ToString()) ?? Array.Empty<string>();
         obj.EnumNames = (schema.Keywords.OfType<EnumNamesKeyword>().FirstOrDefault()?.Names.Where(b => b is not null) ?? Array.Empty<string>())!;
         obj.Minimum = schema.Keywords.OfType<MinimumKeyword>().FirstOrDefault()?.Value;
-        obj.Items = ParseNestedObject(schema.Keywords.OfType<ItemsKeyword>().FirstOrDefault()?.SingleSchema);
+        obj.Items = ParseNestedObject(schema.Keywords.OfType<ItemsKeyword>().FirstOrDefault()?.Items[0]);
         obj.IsRequired = schema.Keywords.OfType<RequiredKeyword>().FirstOrDefault()?.Properties.Any() is true;
         obj.WithSetters = schema.Keywords.OfType<WithSettersKeyword>().FirstOrDefault()?.Value == true;
         obj.WithoutRefs = schema.Keywords.OfType<WithoutRefsKeyword>().FirstOrDefault()?.Value == true;

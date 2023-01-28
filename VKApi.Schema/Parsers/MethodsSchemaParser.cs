@@ -2,6 +2,7 @@
 using Json.Schema;
 using VKApi.Schema.Keywords;
 using VKApi.Schema.Models;
+using ItemsKeyword = VKApi.Schema.Keywords.ItemsKeyword;
 
 namespace VKApi.Schema.Parsers;
 
@@ -95,7 +96,7 @@ internal class MethodsSchemaParser : BaseSchemaParser<IDictionary<string, ApiMet
             MinLength = schema.Keywords.OfType<MinLengthKeyword>().FirstOrDefault()?.Value,
             MaxLength = schema.Keywords.OfType<MaxLengthKeyword>().FirstOrDefault()?.Value,
             MaxItems = schema.Keywords.OfType<MaxItemsKeyword>().FirstOrDefault()?.Value,
-            Items = ParseNestedObject(schema.Keywords.OfType<ItemsKeyword>().FirstOrDefault()?.SingleSchema),
+            Items = ParseNestedObject(schema.Keywords.OfType<ItemsKeyword>().FirstOrDefault()?.Items[0]),
             IsRequired = schema.Keywords.OfType<Keywords.RequiredKeyword>().FirstOrDefault()?.Value is true
         };
     }
