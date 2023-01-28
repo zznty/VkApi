@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VkApi.Core", "VkApi.Core\Vk
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VKApi.Schema", "VKApi.Schema\VKApi.Schema.csproj", "{18C71B56-A360-4050-BA20-E961735DD4DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VkApi.User.Auth", "VkApi.User.Auth\VkApi.User.Auth.csproj", "{A23E7A18-0141-4316-9C84-2DFAA306087C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,5 +35,9 @@ Global
 		{18C71B56-A360-4050-BA20-E961735DD4DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18C71B56-A360-4050-BA20-E961735DD4DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18C71B56-A360-4050-BA20-E961735DD4DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A23E7A18-0141-4316-9C84-2DFAA306087C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A23E7A18-0141-4316-9C84-2DFAA306087C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A23E7A18-0141-4316-9C84-2DFAA306087C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A23E7A18-0141-4316-9C84-2DFAA306087C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
