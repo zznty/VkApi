@@ -1,6 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using JorgeSerrano.Json;
-using VkApi.Core.Abstractions;
 
 namespace VkApi.User.Auth;
 
@@ -16,15 +17,28 @@ public class AuthProvider : IAuthProvider
         PropertyNamingPolicy = new JsonSnakeCaseNamingPolicy()
     };
 
-    public AuthProvider(IApiClient apiClient)
+    public AuthProvider(IReadOnlyDictionary<string, string>? headers = null)
     {
-        foreach (var (key, value) in apiClient.Headers)
+        if (headers is null)
+            return;
+        
+        foreach (var (key, value) in headers)
         {
-            _client.DefaultRequestHeaders.Add(key, value);
+            _client.DefaultRequestHeaders.TryAddWithoutValidation(key, value);
         }
     }
+
+    public static IAuthProvider CreateWithUserAgent(
+        string userAgent = "VKAndroidApp/7.37-13617 (Android 12; SDK 32; armeabi-v7a; VkApi; ru; 2960x1440)")
+    {
+        return new AuthProvider(new Dictionary<string, string>
+        {
+            { "User-Agent", userAgent },
+            { "X-VK-Android-Client", "new" }
+        });
+    }
     
-    public async Task LoginAsync(string username, string password, string? confirmationCode = null)
+    public async Task<AuthResult> LoginAsync(string username, string password, string? confirmationCode = null)
     {
         var parameters = new FormUrlEncodedContent(new KeyValuePair<string, string>[]
         {
@@ -40,29 +54,22 @@ public class AuthProvider : IAuthProvider
         });
 
         using var response = await _client.PostAsync("token", parameters);
-        response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync();
-        var error = await JsonSerializer.DeserializeAsync<AuthError>(stream, _options);
+        var result = JsonNode.Parse(stream)!;
         
-        if (error is null) return;
+        if (result["error"] != null)
+            throw new AuthException(result.Deserialize<AuthError>(_options)!);
 
-        throw new AuthException(error);
+        // in case vk did not send us the error, but returned non success code like 500
+        response.EnsureSuccessStatusCode();
+
+        return result.Deserialize<AuthResult>(_options)!;
     }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
         _client.Dispose();
-    }
-}
-
-public class AuthException : Exception
-{
-    public AuthError Error { get; }
-
-    public AuthException(AuthError error) : base(error.ErrorDescription)
-    {
-        Error = error;
     }
 }
