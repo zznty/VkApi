@@ -125,10 +125,16 @@ public partial class {0} : SmartEnum<{0}, {1}>
     [GeneratedRegex(@"[\s\.,]")]
     private partial Regex InvalidCharRegex();
 
+    private static readonly string[] InvalidNames = { "list", "name", "value" };
+
     private string RemoveInvalidChars(string str)
     {
         str = InvalidCharRegex().Replace(str, "_");
-        return char.IsNumber(str[0]) ? $"_{str}" : str;
+        str = char.IsNumber(str[0]) ? $"_{str}" : str;
+        if (InvalidNames.Contains(str, StringComparer.OrdinalIgnoreCase))
+            str = $"_{str}";
+        
+        return str;
     }
 
     private string EmitType(string name, string ns, IEnumerable<ApiObject> properties, bool isResponse = false)
