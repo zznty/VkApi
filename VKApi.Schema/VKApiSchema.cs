@@ -56,12 +56,10 @@ public static class VKApiSchema
         {
             Fetch = uri =>
             {
-                var entry = zip.Entries.FirstOrDefault(b => b.FullName.Substring("vk-api-schema-master/".Length)
+                var entry = zip.Entries.FirstOrDefault(b => b.FullName["vk-api-schema-master/".Length..]
                                                              .Equals(
-                                                                 uri.GetComponents(
-                                                                        UriComponents.Path, UriFormat.Unescaped)
-                                                                    .Substring("VKCOM/vk-api-schema/raw/master/"
-                                                                                   .Length),
+                                                                 uri.GetComponents(UriComponents.Path, UriFormat.Unescaped)
+                                                                 ["VKCOM/vk-api-schema/raw/master/".Length..],
                                                                  StringComparison.OrdinalIgnoreCase));
                 if (entry is null)
                     return null;
@@ -80,7 +78,7 @@ public static class VKApiSchema
                                .ToAsyncEnumerable()
                                .SelectAwait(async b =>
                                {
-                                   using var stream = b.Open();
+                                   await using var stream = b.Open();
 
                                    var fullName = b.FullName.Substring("vk-api-schema-master/".Length);
 
@@ -88,15 +86,15 @@ public static class VKApiSchema
                                })
                                .ToArrayAsync();
 
+        var resolver = new SchemaResolver(registry);
+
         for (var index = 0; index < schemas.Length; index++)
         {
             var (fullName, schema) = schemas[index];
-            schemas[index] = (fullName, ForceResolveReferences(schema, registry,
-                                                               new(
-                                                                   $"https://github.com/VKCOM/vk-api-schema/raw/master/{fullName}")));
+            schemas[index] = (fullName, resolver.ForceResolveReferences(schema, new($"https://github.com/VKCOM/vk-api-schema/raw/master/{fullName}")));
         }
 
-        using var errorsFile = zip.Entries.First(b => b.Name == "errors.json").Open();
+        await using var errorsFile = zip.Entries.First(b => b.Name == "errors.json").Open();
         var errorsSchema = await JsonSchema.FromStream(errorsFile);
 
         return new()
@@ -109,8 +107,8 @@ public static class VKApiSchema
                                         {
                                             Methods = schemas.FirstOrDefault(
                                                 c => c.FullName ==
-                                                     b.FullName.Substring("vk-api-schema-master/".Length) +
-                                                     "methods.json") is { Schema: { } } methods
+                                                     string.Concat(b.FullName.AsSpan("vk-api-schema-master/".Length),
+                                                                   "methods.json")) is { Schema: { } } methods
                                                 ? new MethodsSchemaParser().ParseSchema(methods.Schema)
                                                 : ImmutableDictionary<string, ApiMethod>.Empty,
                                         }))
@@ -128,8 +126,19 @@ public static class VKApiSchema
             await client.GetStreamAsync("https://github.com/VKCOM/vk-api-schema/archive/refs/heads/master.zip"),
             ZipArchiveMode.Read);
     }
+}
 
-    private static JsonSchema ForceResolveReferences(JsonSchema schema, SchemaRegistry registry, Uri currentUri)
+internal class SchemaResolver
+{
+    private readonly SchemaRegistry _registry;
+    private readonly Dictionary<Uri, JsonSchema> _visitedSchemas = new();
+    
+    public SchemaResolver(SchemaRegistry registry)
+    {
+        _registry = registry;
+    }
+
+    public JsonSchema ForceResolveReferences(JsonSchema schema, Uri currentUri)
     {
         if (schema.Keywords is null)
             return schema;
@@ -139,31 +148,31 @@ public static class VKApiSchema
         var anchors = schema.Keywords.OfType<IAnchorProvider>();
         foreach (var anchor in anchors)
         {
-            anchor.RegisterAnchor(registry, currentUri, schema);
+            anchor.RegisterAnchor(_registry, currentUri, schema);
         }
 
         var keywords = schema.Keywords.OfType<IRefResolvable>().OrderBy(k => ((IJsonSchemaKeyword)k).Priority());
         foreach (var keyword in keywords)
         {
-            keyword.RegisterSubschemas(registry, currentUri);
+            keyword.RegisterSubschemas(_registry, currentUri);
         }
 
         foreach (var collector in schema.Keywords.OfType<IKeyedSchemaCollector>())
         {
             var newKeywords = schema.Keywords!.Where(b => !ReferenceEquals(b, collector)).ToList();
             var schemas = collector.Schemas
-                                   .Select(b => (b.Key, ForceResolveReferences(b.Value, registry, currentUri)))
+                                   .Select(b => (b.Key, ForceResolveReferences(b.Value, currentUri)))
                                    .ToDictionary(b => b.Key, b => b.Item2);
             if (collector is PatternPropertiesKeyword)
                 newKeywords.Add(
                     new PatternPropertiesKeyword(schemas.ToDictionary(b => new Regex(b.Key), b => b.Value)));
             else
-                newKeywords.Add((IJsonSchemaKeyword)Activator.CreateInstance(collector.GetType(), schemas));
+                newKeywords.Add((IJsonSchemaKeyword)Activator.CreateInstance(collector.GetType(), schemas)!);
 
             schema = new(newKeywords)
             {
                 BaseUri = currentUri.OriginalString.Contains('#')
-                    ? new Uri(currentUri.OriginalString.Substring(0, currentUri.OriginalString.IndexOf('#')))
+                    ? new Uri(currentUri.OriginalString[..currentUri.OriginalString.IndexOf('#')])
                     : currentUri
             };
         }
@@ -172,14 +181,14 @@ public static class VKApiSchema
         {
             var newKeywords = schema.Keywords!.Where(b => !ReferenceEquals(b, collector)).ToList();
             var schemas = collector.Schemas?
-                                   .Select(b => ForceResolveReferences(b, registry, currentUri))
+                                   .Select(b => ForceResolveReferences(b, currentUri))
                                    .ToArray() ?? Array.Empty<JsonSchema>();
-            newKeywords.Add((IJsonSchemaKeyword)Activator.CreateInstance(collector.GetType(), (object)schemas));
+            newKeywords.Add((IJsonSchemaKeyword)Activator.CreateInstance(collector.GetType(), (object)schemas)!);
 
             schema = new(newKeywords)
             {
                 BaseUri = currentUri.OriginalString.Contains('#')
-                    ? new Uri(currentUri.OriginalString.Substring(0, currentUri.OriginalString.IndexOf('#')))
+                    ? new Uri(currentUri.OriginalString[..currentUri.OriginalString.IndexOf('#')])
                     : currentUri
             };
         }
@@ -200,12 +209,12 @@ public static class VKApiSchema
 
         currentUri = UpdateUri(refKeyword.Reference, currentUri);
         var fragment = currentUri.GetComponents(UriComponents.Fragment, UriFormat.Unescaped);
-        var cleanUri = new Uri(currentUri.OriginalString.Substring(0, currentUri.OriginalString.IndexOf('#')));
+        var cleanUri = new Uri(currentUri.OriginalString[..currentUri.OriginalString.IndexOf('#')]);
 
         Debug.WriteLine(currentUri);
 
-        var subSchema = registry.GetRegistration(cleanUri)?.Root
-                                .FindSubschema(JsonPointer.Parse(fragment), cleanUri).Item1 ??
+        var subSchema = _registry.GetRegistration(cleanUri)?.Root
+                                 .FindSubschema(JsonPointer.Parse(fragment), cleanUri).Item1 ??
                         throw new FileNotFoundException("Unable to resolve reference", currentUri.ToString());
 
         schema = new(schema.Keywords!.Where(b => !ReferenceEquals(b, refKeyword)).Concat(subSchema.Keywords!))
@@ -214,10 +223,12 @@ public static class VKApiSchema
         };
 
         // prevent from circular reference
-        if (NoResolveNames.All(b => !currentUri.OriginalString.EndsWith(b)))
-            schema = ForceResolveReferences(schema, registry, cleanUri);
+        if (_visitedSchemas.TryGetValue(currentUri, out var visitedSchema))
+            schema = visitedSchema;
+        else
+            schema = _visitedSchemas[currentUri] = ForceResolveReferences(schema, cleanUri);
 
-        registry.RegisterAnchor(cleanUri, fragment, schema);
+        _registry.RegisterAnchor(cleanUri, fragment, schema);
 
         return schema;
     }
