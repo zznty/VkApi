@@ -171,7 +171,7 @@ public partial class {0} : SmartEnum<{0}, {1}>
         var result = type switch
         {
             ApiObjectType.Integer when enumValues.ToArray() is ["0", "1"] && enumNames.ToArray() is ["no", "yes"] => "bool",
-            _ when enumValues.Any() && enumNames.Any() => EmitEnum($"{typeName}{name.ToPascalCase()}", type, enumValues, enumNames),
+            _ when enumValues.Any() => EmitEnum($"{typeName}{name.ToPascalCase()}", type, enumValues, enumNames),
             ApiObjectType.Undefined => null,
             ApiObjectType.Multiple => "JsonElement",
             ApiObjectType.Object => EmitType($"{typeName}{name.ToPascalCase()}", "Objects", properties),
@@ -205,10 +205,16 @@ public partial class {0} : SmartEnum<{0}, {1}>
 
         var sb = new StringBuilder(string.Format(EnumContentStart, name, typeName));
         
-        foreach (var (key,value) in enumNames.Zip(enumValues))
-        {
-            sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(key.ToPascalCase()), typeName == "string" ? $"\"{value}\"" : value).AppendLine();
-        }
+        if (enumNames.Any())
+            foreach (var (key,value) in enumNames.Zip(enumValues))
+            {
+                sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(key.ToPascalCase()), typeName == "string" ? $"\"{value}\"" : value).AppendLine();
+            }
+        else
+            foreach (var value in enumValues)
+            {
+                sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(value.ToPascalCase()), typeName == "string" ? $"\"{value}\"" : value).AppendLine();
+            }
 
         sb.Append('}');
 
