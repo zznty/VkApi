@@ -100,11 +100,19 @@ public partial class {0} : SmartEnum<{0}, {1}>
         var parameterType = parameters.Length > 0
             ? EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Request", parameters)
             : null;
-        var responseType = responses is [{ Properties: { } properties }] &&
-                           properties.FirstOrDefault() is { Properties: { } responseProperties } &&
-                           responseProperties.Any()
-            ? EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
-                       responseProperties, true)
+        var responseType = responses is [{ Properties: { } properties }]
+            ? properties.ToArray() switch
+
+            {
+                [{ Properties: { } responseProperties }] when responseProperties.ToArray() is
+                        { Length: > 0 } responsePropertiesArray =>
+                    EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
+                             responsePropertiesArray, true),
+                [{ Type: ApiObjectType.Array, Items.Properties: { } }] arrayProperties =>
+                    EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
+                             arrayProperties, true),
+                _ => null
+            }
             : null;
 
         var methodHeader =
@@ -176,7 +184,8 @@ public partial class {0} : SmartEnum<{0}, {1}>
     {
         var result = type switch
         {
-            ApiObjectType.Integer when enumValues.ToArray() is ["0", "1"] && enumNames.ToArray() is ["no", "yes"] => "bool",
+            ApiObjectType.Integer when enumValues.ToArray() is ["0", "1"] && enumNames.ToArray() is ["no", "yes"] =>
+                "bool",
             _ when enumValues.Any() => EmitEnum($"{typeName}{name.ToPascalCase()}", type, enumValues, enumNames),
             ApiObjectType.Undefined => null,
             ApiObjectType.Multiple => "JsonElement",
@@ -196,7 +205,8 @@ public partial class {0} : SmartEnum<{0}, {1}>
         return result;
     }
 
-    private string EmitEnum(string name, ApiObjectType type, IEnumerable<string> enumValues, IEnumerable<string> enumNames)
+    private string EmitEnum(string name, ApiObjectType type, IEnumerable<string> enumValues,
+                            IEnumerable<string> enumNames)
     {
         if (_additionalFiles.ContainsKey(name))
             return name;
@@ -210,16 +220,18 @@ public partial class {0} : SmartEnum<{0}, {1}>
         };
 
         var sb = new StringBuilder(string.Format(EnumContentStart, name, typeName));
-        
+
         if (enumNames.Any())
-            foreach (var (key,value) in enumNames.Zip(enumValues))
+            foreach (var (key, value) in enumNames.Zip(enumValues))
             {
-                sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(key.ToPascalCase()), typeName == "string" ? $"\"{value}\"" : value).AppendLine();
+                sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(key.ToPascalCase()),
+                                typeName == "string" ? $"\"{value}\"" : value).AppendLine();
             }
         else
             foreach (var value in enumValues)
             {
-                sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(value.ToPascalCase()), typeName == "string" ? $"\"{value}\"" : value).AppendLine();
+                sb.AppendFormat(EnumEntry, name, RemoveInvalidChars(value.ToPascalCase()),
+                                typeName == "string" ? $"\"{value}\"" : value).AppendLine();
             }
 
         sb.Append('}');
