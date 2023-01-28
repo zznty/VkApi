@@ -11,7 +11,7 @@
     </ItemGroup>
     
     <Target Name="GenerateDto" BeforeTargets="PreBuildEvent">
-        <Exec Command="$(SolutionDir)VkApi.Generator\bin\$(Configuration)\net7.0\VkApi.Generator.exe --target-directory &quot;$(ProjectDir)Generated&quot; --project &quot;$(ProjectPath)&quot; --sdk-path &quot;$(MSBuildBinPath)&quot;" />
+        <Exec Command="..\VkApi.Generator\bin\$(Configuration)\net7.0\VkApi.Generator.exe --target-directory &quot;$(ProjectDir)Generated&quot; --project &quot;$(ProjectPath)&quot; --sdk-path &quot;$(MSBuildBinPath)&quot;" />
         <ItemGroup>
             <Compile Remove="Generated\*.g.cs" />
             <Compile Include="Generated\*.g.cs" />
