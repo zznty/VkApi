@@ -24,6 +24,6 @@ internal class Program
 
         var currentUser = await client.Users.GetAsync(new(null, null, null));
         
-        Console.WriteLine(currentUser.Response?.First());
+        Console.WriteLine(currentUser.First());
     }
 }

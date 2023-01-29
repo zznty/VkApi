@@ -106,11 +106,11 @@ public partial class {0} : SmartEnum<{0}, {1}>
             {
                 [{ Properties: { } responseProperties }] when responseProperties.ToArray() is
                         { Length: > 0 } responsePropertiesArray =>
-                    $"WrapResponse<{EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
-                                responsePropertiesArray)}>",
-                [{ Type: ApiObjectType.Array, Items.Properties: { } }] arrayProperties =>
-                    EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses",
-                             arrayProperties),
+                    EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Response", "Responses", 
+                             responsePropertiesArray),
+                [{ Type: ApiObjectType.Array, Items.Properties: { } arrayProperties }] =>
+                    $"ICollection<{EmitType($"{method.Category.ToPascalCase()}{method.Name.ToPascalCase()}Items", "Responses",
+                                            arrayProperties)}>",
                 _ => null
             }
             : null;

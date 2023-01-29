@@ -62,6 +62,6 @@ public class ApiClient : IApiClient
             throw new ApiException(error["error_code"]!.GetValue<int>(),
                                    error["error_msg"]?.ToString()); // TODO use generated types instead
 
-        return typeof(TResponse) == typeof(EmptyResponse) ? null! : node.Deserialize<TResponse>(_options)!;
+        return typeof(TResponse) == typeof(EmptyResponse) ? null! : node!["response"].Deserialize<TResponse>(_options)!;
     }
 }
