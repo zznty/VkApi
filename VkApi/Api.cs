@@ -1,5 +1,6 @@
 ﻿using VkApi.Core.Abstractions;
 using VkApi.Core.Categories;
+using VkApi.Core.Errors;
 
 namespace VkApi;
 
@@ -7,7 +8,7 @@ public class Api
 {
     public Api(string token, string version = "5.131")
     {
-        Client = new ApiClient(new()
+        Client = new ApiClient(new ApiExceptionFactory(), new()
         {
             BaseAddress = new("https://api.vk.com/method/"),
             DefaultRequestHeaders =

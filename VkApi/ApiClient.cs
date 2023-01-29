@@ -11,6 +11,7 @@ namespace VkApi;
 
 public class ApiClient : IApiClient
 {
+    private readonly IApiExceptionFactory _exceptionFactory;
     private readonly HttpClient _httpClient;
     private readonly string _version;
 
@@ -20,8 +21,9 @@ public class ApiClient : IApiClient
         PropertyNamingPolicy = new JsonSnakeCaseNamingPolicy()
     };
 
-    public ApiClient(HttpClient httpClient, string version)
+    public ApiClient(IApiExceptionFactory exceptionFactory, HttpClient httpClient, string version)
     {
+        _exceptionFactory = exceptionFactory;
         _httpClient = httpClient;
         _version = version;
     }
@@ -59,8 +61,7 @@ public class ApiClient : IApiClient
         var node = JsonNode.Parse(responseStream);
 
         if (node?["error"] is { } error)
-            throw new ApiException(error["error_code"]!.GetValue<int>(),
-                                   error["error_msg"]?.ToString()); // TODO use generated types instead
+            throw _exceptionFactory.CreateExceptionFromCode(error["error_code"]!.GetValue<int>());
 
         return typeof(TResponse) == typeof(EmptyResponse) ? null! : node!["response"].Deserialize<TResponse>(_options)!;
     }
